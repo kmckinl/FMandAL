@@ -3,6 +3,8 @@ package com.yelink.fmandal.rendering;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 
+import com.yelink.fmandal.InputController;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -34,7 +36,7 @@ public class Display {
 		glfwSetWindowPos(window, (vidmode.width() - WINDOW_WIDTH) / 2, (vidmode.height() - WINDOW_HEIGHT) / 2);
 		
 		// Input Stuff
-		//glfwSetKeyCallback(window, new Input());
+		glfwSetKeyCallback(window, new InputController());
 		//glfwSetCursorPosCallback(window, new Cursor());
 		//glfwSetMouseButtonCallback(window, new MouseInput());
 		//glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);

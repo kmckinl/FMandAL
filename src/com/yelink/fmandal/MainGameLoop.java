@@ -3,13 +3,27 @@ package com.yelink.fmandal;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
+import com.yelink.fmandal.InputController;
+import com.yelink.fmandal.development.Test;
+import com.yelink.fmandal.entities.Enemies;
+import com.yelink.fmandal.font.FontController;
 import com.yelink.fmandal.rendering.Display;
+import com.yelink.fmandal.rendering.Shader;
+import com.yelink.fmandal.rendering.Shader;
+import com.yelink.fmandal.utilities.FontUtils;
+import com.yelink.fmandal.utilities.Matrix4f;
+
 
 public class MainGameLoop implements Runnable {
-	private long variableYieldTime, lastTime;
+	private long variableYieldTime, lastTime, timer;
 	private boolean running = true;
 	
 	private Thread thread;
+	
+	private Player player;
+	private Enemies enemy;
+	
+	private FontController fontController;
 	
 	public void start() {
 		thread = new Thread(this, "game loop");
@@ -18,8 +32,31 @@ public class MainGameLoop implements Runnable {
 	
 	public void update() {
 		Display.updateDisplay();
-		
+		player.update();
 		// TODO add input checks/updates
+		if (InputController.keys[GLFW_KEY_UP]) {
+			
+		}
+		if (InputController.keys[GLFW_KEY_DOWN]) {
+			
+		}
+		if (InputController.keys[GLFW_KEY_LEFT]) {
+			
+		}
+		if (InputController.keys[GLFW_KEY_RIGHT]) {
+			
+		}
+		if (InputController.keys[GLFW_KEY_SPACE]) {
+			player.setSwap();
+		}
+		if (InputController.keys[GLFW_KEY_Q]) {
+			player.attack();
+		}
+		if (InputController.keys[GLFW_KEY_E]) {
+			//Really need to figure out a better way of doing this as it is
+			//Currently crashing if more than one attacks trigger at once.
+			player.setTrigger(false);
+		}
 
 	}
 	
@@ -31,7 +68,10 @@ public class MainGameLoop implements Runnable {
 		}
 		
 		// TODO render stuff
-
+		player.render();
+		enemy.render();
+		//FontOld.bangers.draw();
+		fontController.renderText();
 		
 		glfwSwapBuffers(Display.window);
 	}
@@ -39,20 +79,28 @@ public class MainGameLoop implements Runnable {
 	@Override
 	public void run() {
 		// Create the display 
-		Display.createDisplay("Prop Hunt", false);
-		
+		Display.createDisplay("The Adventures of Fly Man and Aqua Lad", false);
+
 		// Load shaders
-		//Shader.loadAll();
+		Shader.loadAll();
 		
 		// Create projection matrix
-		//Matrix4f pr_matrix = Matrix4f.orthographic(0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT, 0, 1000, -1000);
+		Matrix4f pr_matrix = Matrix4f.orthographic(0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT, 0, 1, -1);
 		
 		// Set pr_matrix
-
+		Shader.TEST.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.CHARACTER.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.CHARACTER.setUniform1i("tex", 1);
+		Shader.FONT.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.FONT.setUniform1i("tex", 1);
 		
 		// Create entities
-
+		fontController = new FontController();
+		player = new Player(fontController);
+		enemy = new Enemies();
+		fontController.loadText("bangers", "level", 250, 250, false);
 		
+		//FontOld.bangers.loadText("100", 250, 250, false);
 		// Game Loop
 		while(running) {
 			sync(60);
@@ -61,6 +109,7 @@ public class MainGameLoop implements Runnable {
 		}
 		
 		// Clean up
+		//test.cleanUp();
 		Display.closeDisplay();
 		
 	}
@@ -102,7 +151,7 @@ public class MainGameLoop implements Runnable {
 				this.variableYieldTime = Math.max(this.variableYieldTime - 2 * 1000, 0);
 			}
 		}
-		
+
 		update();
 		render();
 	}
