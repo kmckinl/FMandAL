@@ -1,17 +1,16 @@
 package com.yelink.fmandal.entities;
 
+import com.yelink.fmandal.utilities.Vector3f;
+
 public class Character {
 	private String name;
-	private int health;
-	private int power;
-	private int speed;
-	private int attSpeed;
-	private int jumpHeight;
+	private int health, power, speed, attSpeed, jumpHeight;
+	private float width, height, attReach;
 	private boolean doubleJump;
 	/*
 	 * Phrases:
 	 * Fly-Man: Get off my antennae, these are for the ladies!
-	 * Fly-man: Things aren't just meant for flying, they're meant for speed!
+	 * Fly-man: These things aren't just meant for flying, they're meant for speed!
 	 */
 	public Character(String name) {
 		this.name = name;
@@ -22,6 +21,9 @@ public class Character {
 			this.speed = 3;
 			this.attSpeed = 2;
 			this.jumpHeight = 20;
+			this.width = 100.0f;
+			this.height = 180.0f;
+			this.attReach = 65.0f;
 			this.doubleJump = true;
 		} else if (this.name == "Aqua Lad") {
 			this.health = 200;
@@ -30,12 +32,15 @@ public class Character {
 			this.attSpeed = 1;
 			this.jumpHeight = 15;
 			this.doubleJump = false;
+			this.width = 120.0f;
+			this.height = 180.0f;
+			this.attReach = 50.0f;
 		}
 	}
 	
 	/* -- -- -- GETTERS / SETTERS -- -- -- */
 	public void setHeatlh(int delHealth) {
-		this.health += delHealth;
+		this.health += delHealth; 
 	}
 	
 	public int getHealth() {
@@ -72,5 +77,21 @@ public class Character {
 	
 	public boolean getDoubleJump() {
 		return this.doubleJump;
+	}
+	
+	public float getReach() {
+		return this.attReach;
+	}
+	
+	public float[] getBounds() {
+		return new float[] { this.width, this.height };
+	}
+	
+	public float getWidth() {
+		return this.width;
+	}
+	
+	public float getHeight() {
+		return this.height;
 	}
 }

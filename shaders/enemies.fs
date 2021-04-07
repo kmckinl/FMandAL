@@ -8,12 +8,12 @@ in DATA
 	vec3 position;
 } fs_in;
 
-uniform vec2 texOffset;
+//uniform vec2 texOffset;
 uniform sampler2D tex;
 
 void main()
 {
-	color = texture(tex, fs_in.tc + texOffset);
+	color = texture(tex, fs_in.tc);
 	if(color.w < 1.0f)
 		discard;
 }

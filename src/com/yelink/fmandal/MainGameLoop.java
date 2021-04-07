@@ -3,9 +3,18 @@ package com.yelink.fmandal;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.yelink.fmandal.InputController;
 import com.yelink.fmandal.development.Test;
 import com.yelink.fmandal.entities.Enemies;
+import com.yelink.fmandal.entities.EnemyController;
+import com.yelink.fmandal.entities.EntityController;
+import com.yelink.fmandal.entities.Item;
+import com.yelink.fmandal.entities.Terrain;
 import com.yelink.fmandal.font.FontController;
 import com.yelink.fmandal.rendering.Display;
 import com.yelink.fmandal.rendering.Shader;
@@ -22,8 +31,13 @@ public class MainGameLoop implements Runnable {
 	
 	private Player player;
 	private Enemies enemy;
-	
+	private Terrain terrain;
+	private Item item;
+	private EnemyController enemyController;
+	private EntityController entityController;
+	private CombatController combatController;
 	private FontController fontController;
+	private Map<Integer, List<Enemies>> enemies = new HashMap<Integer, List<Enemies>>();
 	
 	public void start() {
 		thread = new Thread(this, "game loop");
@@ -33,29 +47,39 @@ public class MainGameLoop implements Runnable {
 	public void update() {
 		Display.updateDisplay();
 		player.update();
+		//item.update(player.getPosition());
+		enemyController.update(player.getPosition());
+		entityController.update();
 		// TODO add input checks/updates
 		if (InputController.keys[GLFW_KEY_UP]) {
-			
+			player.move(0.0f, -1.0f);
 		}
 		if (InputController.keys[GLFW_KEY_DOWN]) {
-			
+			player.move(0.0f, 1.0f);
 		}
 		if (InputController.keys[GLFW_KEY_LEFT]) {
-			
+			player.move(-1.0f, 0.0f);
 		}
 		if (InputController.keys[GLFW_KEY_RIGHT]) {
-			
+			player.move(1.0f, 0.0f);
 		}
-		if (InputController.keys[GLFW_KEY_SPACE]) {
+		if (InputController.keys[GLFW_KEY_TAB]) {
 			player.setSwap();
 		}
 		if (InputController.keys[GLFW_KEY_Q]) {
-			player.attack();
+			if (player.getCenter()[0] + player.getReach() >= enemy.getBounds()[0] &&
+					player.getCenter()[1] <= enemy.getBounds()[3] &&
+					player.getCenter()[1] >= enemy.getBounds()[2]) {
+				player.attack(true); 
+
+			} else {
+				player.attack(false);
+			}
 		}
 		if (InputController.keys[GLFW_KEY_E]) {
 			//Really need to figure out a better way of doing this as it is
 			//Currently crashing if more than one attacks trigger at once.
-			player.setTrigger(false);
+			player.setAttackCheck(false);
 		}
 
 	}
@@ -69,10 +93,14 @@ public class MainGameLoop implements Runnable {
 		
 		// TODO render stuff
 		player.render();
-		enemy.render();
+		//enemy.render();
+		enemyController.render();
+		terrain.render();
 		//FontOld.bangers.draw();
-		fontController.renderText();
+		fontController.renderText(player.getPosition());
 		
+		//item.render();
+		entityController.render();
 		glfwSwapBuffers(Display.window);
 	}
 
@@ -93,14 +121,24 @@ public class MainGameLoop implements Runnable {
 		Shader.CHARACTER.setUniform1i("tex", 1);
 		Shader.FONT.setUniformMat4f("pr_matrix", pr_matrix);
 		Shader.FONT.setUniform1i("tex", 1);
+		Shader.ENEMIES.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.ENEMIES.setUniform1i("tex", 1);
+		Shader.TERRAIN.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.TERRAIN.setUniform1i("tex", 1);
 		
 		// Create entities
 		fontController = new FontController();
-		player = new Player(fontController);
-		enemy = new Enemies();
-		fontController.loadText("bangers", "level", 250, 250, false);
 		
-		//FontOld.bangers.loadText("100", 250, 250, false);
+		player = new Player(fontController);
+		enemyController = new EnemyController(fontController);
+
+		fontController.loadText("bangers", "level", 250, 250, false);
+		combatController = new CombatController(player, enemies);
+		
+		terrain = new Terrain();
+
+		//item = new Item(0, 900.0f, 20.0f);
+		entityController = new EntityController(player);
 		// Game Loop
 		while(running) {
 			sync(60);

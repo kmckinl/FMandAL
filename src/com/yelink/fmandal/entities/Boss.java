@@ -13,6 +13,6 @@ public class Boss {
 	 * 
 	 */
 	public Boss(boolean miniboss) {
-		this.miniBoss = miniBoss;
+		this.miniBoss = miniBoss; 
 	}
 }

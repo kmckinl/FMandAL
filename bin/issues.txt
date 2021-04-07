@@ -1,0 +1,4 @@
+ConcurrentModificationException when trying to input a new string of text while the 
+map / list is being iterated, currently resolved with a try/catch but would like to see about
+properly implementing it so the "pow" text can be used the way I want.
+

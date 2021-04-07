@@ -74,7 +74,7 @@ public class TextReader {
 
 			
 			meshes.add(new TextMesh(x, y, xOffset, yOffset,
-									xMax, yMax, xTC, yTC, xMaxTC, yMaxTC));
+									xMax, yMax, xTC, yTC, xMaxTC, yMaxTC, textOb.getTimed()));
 					
 			x += xMax;
 			y = textOb.getY();
