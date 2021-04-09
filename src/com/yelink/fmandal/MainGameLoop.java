@@ -37,6 +37,8 @@ public class MainGameLoop implements Runnable {
 	private EntityController entityController;
 	private CombatController combatController;
 	private FontController fontController;
+	private HUDController hudController;
+	
 	private Map<Integer, List<Enemies>> enemies = new HashMap<Integer, List<Enemies>>();
 	
 	public void start() {
@@ -46,42 +48,46 @@ public class MainGameLoop implements Runnable {
 	
 	public void update() {
 		Display.updateDisplay();
-		player.update();
+		
 		//item.update(player.getPosition());
-		enemyController.update(player.getPosition());
+		enemyController.update(player.getPosition(), player.getCharacter().getCenter());
 		entityController.update();
-		// TODO add input checks/updates
+		combatController.update();
+		
 		if (InputController.keys[GLFW_KEY_UP]) {
+			player.setIdle(false);
+			player.setMoving(true);
 			player.move(0.0f, -1.0f);
 		}
 		if (InputController.keys[GLFW_KEY_DOWN]) {
+			player.setIdle(false);
+			player.setMoving(true);
 			player.move(0.0f, 1.0f);
 		}
 		if (InputController.keys[GLFW_KEY_LEFT]) {
+			player.setIdle(false);
+			player.setMoving(true);
 			player.move(-1.0f, 0.0f);
 		}
 		if (InputController.keys[GLFW_KEY_RIGHT]) {
+			player.setIdle(false);
+			player.setMoving(true);
 			player.move(1.0f, 0.0f);
 		}
 		if (InputController.keys[GLFW_KEY_TAB]) {
 			player.setSwap();
 		}
 		if (InputController.keys[GLFW_KEY_Q]) {
-			if (player.getCenter()[0] + player.getReach() >= enemy.getBounds()[0] &&
-					player.getCenter()[1] <= enemy.getBounds()[3] &&
-					player.getCenter()[1] >= enemy.getBounds()[2]) {
-				player.attack(true); 
-
-			} else {
-				player.attack(false);
-			}
+			combatController.attack(true, false);
 		}
 		if (InputController.keys[GLFW_KEY_E]) {
 			//Really need to figure out a better way of doing this as it is
 			//Currently crashing if more than one attacks trigger at once.
 			player.setAttackCheck(false);
 		}
-
+		hudController.update();
+		player.updateFrame();
+		player.update();
 	}
 	
 	public void render() {
@@ -101,6 +107,8 @@ public class MainGameLoop implements Runnable {
 		
 		//item.render();
 		entityController.render();
+		hudController.render();
+		
 		glfwSwapBuffers(Display.window);
 	}
 
@@ -125,6 +133,8 @@ public class MainGameLoop implements Runnable {
 		Shader.ENEMIES.setUniform1i("tex", 1);
 		Shader.TERRAIN.setUniformMat4f("pr_matrix", pr_matrix);
 		Shader.TERRAIN.setUniform1i("tex", 1);
+		Shader.HUD.setUniformMat4f("pr_matrix", pr_matrix);
+		Shader.HUD.setUniform1i("tex", 1);
 		
 		// Create entities
 		fontController = new FontController();
@@ -132,13 +142,16 @@ public class MainGameLoop implements Runnable {
 		player = new Player(fontController);
 		enemyController = new EnemyController(fontController);
 
-		fontController.loadText("bangers", "level", 250, 250, false);
-		combatController = new CombatController(player, enemies);
+		fontController.loadText("bangers", "Level 1", 1720, 64, false);
+		combatController = new CombatController(player, enemyController.getEnemies());
 		
 		terrain = new Terrain();
 
 		//item = new Item(0, 900.0f, 20.0f);
 		entityController = new EntityController(player);
+		
+		hudController = new HUDController(player);
+		
 		// Game Loop
 		while(running) {
 			sync(60);

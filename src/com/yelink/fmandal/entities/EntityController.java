@@ -15,7 +15,7 @@ public class EntityController {
 	public EntityController(Player player) {
 		this.player = player;
 		items.put(key, new ArrayList<Item>());
-		items.get(key).add(new Item(0, 900.0f, 80.0f));
+		items.get(key).add(new Item(0, 900.0f, 160.0f));
 	}
 	
 	public void update() {
@@ -33,7 +33,12 @@ public class EntityController {
 	public void render() {
 		for (int key : items.keySet()) {
 			for (Item item : items.get(key)) {
-				item.render();
+				if (item.getPickedUp()) {
+					items.remove(key);
+				} else {
+					item.render();
+				}
+				
 			}
 		}
 	}

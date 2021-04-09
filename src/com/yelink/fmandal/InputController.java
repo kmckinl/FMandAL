@@ -13,4 +13,12 @@ public class InputController extends GLFWKeyCallback {
 	public static boolean isKeyDown(int keycode) {
 		return keys[keycode];
 	}
+	
+	public static boolean isKeyReleased(int keycode) {
+		return keys[keycode];
+	}
+	
+	public static boolean isKeyPressed(int keycode) {
+		return keys[keycode];
+	}
 }

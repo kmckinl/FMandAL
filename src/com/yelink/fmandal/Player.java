@@ -5,6 +5,9 @@ import com.yelink.fmandal.rendering.Texture;
 import com.yelink.fmandal.rendering.VertexArray;
 import com.yelink.fmandal.utilities.Matrix4f;
 import com.yelink.fmandal.utilities.Vector3f;
+
+import java.awt.Rectangle;
+
 import com.yelink.fmandal.development.BoundsBox;
 import com.yelink.fmandal.entities.Character;
 import com.yelink.fmandal.font.FontController;
@@ -17,13 +20,14 @@ public class Player {
 	private boolean swapping = false;
 	private boolean attack = false;
 	private boolean moving = false;
-	private float moveX, moveY, xOffset, yOffset;
+	private boolean idle = true;
+	private boolean movingLeft = false;
+	private float xOffset, yOffset;
 	private Vector3f position, movement;
 	private Character flyMan, aquaLad;
 	private VertexArray FlyMan, AquaLad;
 	private Texture FlyTexture, LadTexture;
 	private FontController fc;
-	private CombatController cc;
 	
 	/* Development Parameters to be removed before deployment */
 	private BoundsBox fmSpriteBounds, fmReachBounds, fmCollectBounds, aqSpriteBounds, aqReachBounds;
@@ -32,14 +36,12 @@ public class Player {
 	
 	public Player(FontController fc) {
 		this.fc = fc;
-		this.cc = cc;
 		
 		// Initialize position
 		position = new Vector3f(500.0f, 500.0f, 0.0f);
 		movement = new Vector3f(0.0f, 0.0f, 0.0f);
 		// Initialize movement to Fly Man
-		moveX = 0.0f;
-		moveY = 0.0f;
+
 		
 		this.xOffset = 0.0f;
 		this.yOffset = 0.0f;
@@ -57,39 +59,35 @@ public class Player {
 		};
 		
 		float[] tcs = new float[] {
-			// Y is +1 currently since there is only one row but will be more later
+			// Will need to remake the sprite sheet, try to keept to a divisble dimensions
 			xOffset, yOffset,
-			xOffset + (1.0f / 3.0f), yOffset,
-			xOffset + (1.0f / 3.0f), yOffset + 1,
-			xOffset, yOffset + 1
+			xOffset + (1.0f / 10.0f), yOffset,
+			xOffset + (1.0f / 10.0f), yOffset + (1.0f / 3.0f),
+			xOffset, yOffset + (1.0f / 3.0f)
 		};
 		
-		flyMan = new Character("Fly-Man");
-		aquaLad = new Character("Aqua Lad");
+		flyMan = new Character("Fly-Man", position.x, position.y);
+		aquaLad = new Character("Aqua Lad", position.x, position.y);
 		FlyMan = new VertexArray(vertices, indices, tcs);
-		FlyTexture = new Texture("res/fmsheet.png");
+		FlyTexture = new Texture("res/flymansheet.png");
 		AquaLad = new VertexArray(vertices, indices, tcs);
 		LadTexture = new Texture("res/aqualad.png");
 		
 		/* Development Parameters to be removed before deployment */
-		fmSpriteBounds = new BoundsBox(position.x, position.y, flyMan.getWidth(), flyMan.getHeight(), new float[] { position.x + 100.0f, position.y + 100.0f });
+		/*fmSpriteBounds = new BoundsBox(position.x, position.y, flyMan.getWidth(), flyMan.getHeight(), new float[] { position.x + 100.0f, position.y + 100.0f });
 		fmReachBounds = new BoundsBox(getCenter()[0], getCenter()[1], flyMan.getReach(), 30.0f, new float[] { position.x + 100.0f, position.y + 100.0f });
 		fmCollectBounds = new BoundsBox(getCenter()[0] - 20.0f, getCenter()[1] - 40.0f, 40.0f, 80.0f, getCenter());
 		isFlyMan = false;
 		aqSpriteBounds = new BoundsBox(position.x, position.y, aquaLad.getWidth(), aquaLad.getHeight(), new float[] { position.x + 100.0f, position.y + 100.0f });
 		aqReachBounds = new BoundsBox(getCenter()[0], getCenter()[1], aquaLad.getReach(), 30.0f, new float[] { position.x + 100.0f, position.y + 100.0f });
-		isFlyMan = true;
+		isFlyMan = true;*/
 		
 		this.defAttSpeed = this.defAttSpeed * flyMan.getAttSpeed();
 	}
 	
 	public void update() {
-		this.frameTick++;
-		if (this.frameTick % 15 == 0) {
-			this.xOffset += (1.0f / 3.0f);
-			if (this.xOffset >= 1.0f) {
-				this.xOffset = 0.0f;
-			}
+		if (moving) {
+			
 		}
 		if (this.attack) {
 			this.defAttSpeed -= 1;
@@ -110,10 +108,9 @@ public class Player {
 				this.swapping = false;
 			}
 		}
-		//This is 999 in order to be divisible by 15
-		if (this.frameTick == 1005) {
-			this.frameTick = 0;
-		}
+
+		this.moving = false;
+		this.idle = true;
 	}
 	
 	public void render() {
@@ -122,13 +119,13 @@ public class Player {
 			Shader.CHARACTER.enable();
 			FlyMan.bind();
 			Shader.CHARACTER.setUniformMat4f("vw_matrix", Matrix4f.translate(this.movement));
-			Shader.CHARACTER.setUniform2f("texOffset", this.xOffset, 0); //No yOffset yet
+			Shader.CHARACTER.setUniform2f("texOffset", this.xOffset, this.yOffset);
 			FlyMan.draw();
 			
 			Shader.CHARACTER.disable();
 			FlyTexture.unbind();
-			fmSpriteBounds.render();
-			fmReachBounds.render();
+			//fmSpriteBounds.render();
+			//fmReachBounds.render();
 		} else {
 			LadTexture.bind();
 			Shader.CHARACTER.enable();
@@ -138,8 +135,8 @@ public class Player {
 			
 			Shader.CHARACTER.disable();
 			LadTexture.unbind();
-			aqSpriteBounds.render();
-			aqReachBounds.render();
+			//aqSpriteBounds.render();
+			//aqReachBounds.render();
 		}
 	}
 	
@@ -157,12 +154,38 @@ public class Player {
 		return new Vector3f(this.position.x + this.movement.x, this.position.y + this.movement.y, 0.0f);
 	}
 	
-	public float[] getBounds() {
+	public Rectangle getCharBounds() {
 		
 		if (this.isFlyMan) {
-			return checkBounds(this.flyMan.getBounds());
+			return this.flyMan.getBounds();
 		} else {
-			return checkBounds(this.aquaLad.getBounds());
+			return this.aquaLad.getBounds();
+		}
+	}
+	
+	public Rectangle getReachBounds() {
+		
+		if (this.isFlyMan) {
+			return this.flyMan.getReachBounds();
+		} else {
+			return this.aquaLad.getReachBounds();
+		}
+	}
+
+	public Rectangle getCollectBounds() {
+		
+		if (this.isFlyMan) {
+			return this.flyMan.getCollectBounds();
+		} else {
+			return this.aquaLad.getCollectBounds();
+		}
+	}
+	
+	public Character getCharacter() {
+		if (this.isFlyMan) {
+			return this.flyMan;
+		} else {
+			return this.aquaLad;
 		}
 	}
 	
@@ -178,11 +201,16 @@ public class Player {
 		if (this.swapCD >= 300) {
 			this.swapping = true;
 			this.isFlyMan = !this.isFlyMan;
+			setAttSpeed();
 		}
 	}
 	
 	public void setAttackCheck(boolean att) {
 		this.attack = att;
+	}
+	
+	public boolean getAttack() {
+		return this.attack;
 	}
 	
 	public float[] getCenter() {
@@ -194,12 +222,24 @@ public class Player {
 		
 	}
 	
-	public float[] getPickUpBounds() {
+	public float getAttSpeed() {
+		return this.defAttSpeed;
+	}
+	
+	public void setAttSpeed() {
 		if (this.isFlyMan) {
-			return new float[] { flyMan.getBounds()[0] / 2, flyMan.getBounds()[1] / 2 };
+			this.defAttSpeed = 30.0f * this.flyMan.getAttSpeed();
 		} else {
-			return new float[] { aquaLad.getBounds()[0] / 2, aquaLad.getBounds()[1] / 2 };
+			this.defAttSpeed = 30.0f * this.aquaLad.getAttSpeed();
 		}
+	}
+	
+	public void setIdle(boolean idle) {
+		this.idle = idle;
+	}
+	
+	public void setMoving(boolean moving) {
+		this.moving = moving;
 	}
 	
 	public float[] checkBounds(float[] bounds) {
@@ -213,23 +253,96 @@ public class Player {
 			if (attack == false) {
 				text = fc.loadText("bangers", "POW!", this.position.x + 50.0f, this.position.y - 50.0f, true);
 				attack = true; 
-				System.out.println("hit");
 			}
 		}
 		
 	}
 	
-	public void move(float x, float y) {
-		this.moving = true;
-		if (this.isFlyMan) {
-			if (!checkBorder(new float[] {x, y},this.flyMan.getHeight(), this.flyMan.getWidth(), this.flyMan.getSpeed())) {
-				updatePosition(x * this.flyMan.getSpeed(), y * this.flyMan.getSpeed());
-			}
-		} else {
-			if (!checkBorder(new float[] { x, y }, this.aquaLad.getHeight(), this.aquaLad.getWidth(), this.aquaLad.getSpeed())) {
-				updatePosition(x * this.aquaLad.getSpeed(), y * this.aquaLad.getSpeed());
+	public void updateFrame() {
+		this.frameTick++;
+		if (this.frameTick % 9 == 0) {
+			if (this.idle) {
+				this.yOffset = 0.0f;
+				if (this.movingLeft) {
+					if (this.xOffset < 3.0f / 10.0f) {
+						this.xOffset = 3.0f / 10.0f;
+					}
+					this.xOffset += (1.0f / 10.0f);
+					if (this.xOffset > 5.0f / 10.0f) {
+						this.xOffset = 3.0f / 10.0f;
+					}
+				} else {
+					if (this.xOffset >= 3.0f / 10.0f) {
+						this.xOffset = 0.0f;
+					}
+					this.xOffset += (1.0f / 10.0f);
+					if (this.xOffset >= 3.0f / 10.0f) {
+						this.xOffset = 0.0f;
+					}
+				}
+			} 
+
+			if (this.moving) {
+				
+				this.yOffset = (1.0f / 3.0f);
+				if (this.movingLeft) {
+					if (this.xOffset < 5.0f / 10.0f) {
+						this.xOffset = 5.0f / 10.0f;
+					}
+					this.xOffset += (1.0f / 10.0f);
+					if (this.xOffset >= 1) {
+						this.xOffset = 5.0f / 10.0f;
+					}
+				} else {
+					if (this.xOffset >= 5.0f / 10.0f) {
+						this.xOffset = 0.0f;
+					}
+					this.xOffset += 1.0f / 10.0f;
+					if (this.xOffset >= 5.0f / 10.0f) {
+						this.xOffset = 0.0f;
+					}
+				}
 			}
 		}
+
+		if (this.frameTick == 1005) {
+			this.frameTick = 0;
+		}
+	}
+
+	public void move(float x, float y) {
+		
+		if (x < 0) { 
+			if (!this.movingLeft) {
+				if (this.moving) {
+					this.xOffset = 5.0f / 10.0f;
+				} else {
+					this.xOffset = 3.0f / 10.0f;
+				}
+					
+			}
+			this.movingLeft = true; 
+		} else if (x > 0) { 
+			if (this.movingLeft) {
+				this.xOffset = 0.0f;
+			}
+			this.movingLeft = false; 
+			}
+		if (this.moving) {
+			if (this.isFlyMan) {
+				if (!checkBorder(new float[] {x, y},this.flyMan.getHeight(), this.flyMan.getWidth(), this.flyMan.getSpeed())) {
+					updatePosition(x * this.flyMan.getSpeed(), y * this.flyMan.getSpeed());
+					this.flyMan.setBoundsPosition((int) (this.flyMan.getSpeed() * x), (int) (this.flyMan.getSpeed() * y));
+				}
+			} else {
+				if (!checkBorder(new float[] { x, y }, this.aquaLad.getHeight(), this.aquaLad.getWidth(), this.aquaLad.getSpeed())) {
+					updatePosition(x * this.aquaLad.getSpeed(), y * this.aquaLad.getSpeed());
+					this.flyMan.setBoundsPosition((int) (this.flyMan.getSpeed() * x), (int) (this.flyMan.getSpeed() * y));
+				}
+			}
+			
+		}
+		
 	}
 	
 	public boolean checkBorder(float[] dir, float height, float width, float speed) {
@@ -252,10 +365,18 @@ public class Player {
 	public void updatePosition(float x, float y) {
 		this.movement.x += x;
 		this.movement.y += y;
-		this.fmSpriteBounds.updatePosition(x, y);
-		this.fmReachBounds.updatePosition(x, y);
-		this.aqSpriteBounds.updatePosition(x, y);
-		this.aqReachBounds.updatePosition(x, y);
-		this.moving = false;
+		//this.fmSpriteBounds.updatePosition(x, y);
+		//this.fmReachBounds.updatePosition(x, y);
+		//this.aqSpriteBounds.updatePosition(x, y);
+		//this.aqReachBounds.updatePosition(x, y);
+		//this.moving = false;
+	}
+	
+	public void updateHealth(int health) {
+		if (isFlyMan) {
+			this.flyMan.setHealth(health);
+		} else {
+			this.aquaLad.setHealth(health);
+		}
 	}
 }

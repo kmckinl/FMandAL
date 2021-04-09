@@ -2,3 +2,11 @@ ConcurrentModificationException when trying to input a new string of text while 
 map / list is being iterated, currently resolved with a try/catch but would like to see about
 properly implementing it so the "pow" text can be used the way I want.
 
+Currently the 'reach' bounds boxes don't swap when facing the opposite direction. This can likely be 
+implemented by simply placing a check during update to see if the direction has swapped and then 
+set the location either to the centerX, centerY of the entity or to centerX - width (of the reach bounds).
+
+Need to work on perspective of sprites (man-hole, etc.)
+
+movingLeft in Player (for determing offsets of texture sprites) needs to be adjusted. If the player holds both left and
+right at the same time it repeatedly changes movingLeft and flickers between right and left sprites.

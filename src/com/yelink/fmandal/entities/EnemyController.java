@@ -20,9 +20,9 @@ public class EnemyController {
 		enemies.get(key).add(new Enemies(key));
 	}
 	
-	public void update(Vector3f playerpos) {
+	public void update(Vector3f playerpos, float[] playerCenter) {
 		for (Enemies enemy : enemies.get(key)) {
-			enemy.update(playerpos);
+			enemy.update(playerpos, playerCenter);
 		}
 	}
 	

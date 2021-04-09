@@ -14,7 +14,7 @@ public class Shader {
 	public static final int VERTEX_ATTRIB = 0;
 	public static final int TCOORD_ATTRIB = 1;
 	
-	public static Shader TEST, CHARACTER, ENEMIES, TERRAIN;
+	public static Shader TEST, CHARACTER, ENEMIES, TERRAIN, HUD;
 	public static FontShader FONT;
 	
 	private boolean enabled = false;
@@ -31,6 +31,7 @@ public class Shader {
 		CHARACTER = new Shader("shaders/character.vs", "shaders/character.fs");
 		ENEMIES = new Shader("shaders/enemies.vs", "shaders/enemies.fs");
 		TERRAIN = new Shader("shaders/terrain.vs", "shaders/terrain.fs");
+		HUD = new Shader("shaders/hud.vs", "shaders/hud.fs");
 		FONT = new FontShader(); 
 	}
 	
